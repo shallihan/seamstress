@@ -1,176 +1,240 @@
-import * as React from "react"
+import React, { useEffect, useRef, useState } from "react";
+import { graphql } from "gatsby";
+import { GatsbyImage, getImage } from "gatsby-plugin-image";
+import styled from "styled-components";
+import { gsap } from "gsap";
 
-const pageStyles = {
-  color: "#232129",
-  padding: 96,
-  fontFamily: "-apple-system, Roboto, sans-serif, serif",
-}
-const headingStyles = {
-  marginTop: 0,
-  marginBottom: 64,
-  maxWidth: 320,
-}
-const headingAccentStyles = {
-  color: "#663399",
-}
-const paragraphStyles = {
-  marginBottom: 48,
-}
-const codeStyles = {
-  color: "#8A6534",
-  padding: 4,
-  backgroundColor: "#FFF4DB",
-  fontSize: "1.25rem",
-  borderRadius: 4,
-}
-const listStyles = {
-  marginBottom: 96,
-  paddingLeft: 0,
-}
-const listItemStyles = {
-  fontWeight: 300,
-  fontSize: 24,
-  maxWidth: 560,
-  marginBottom: 30,
-}
+import GlobalStyles from "../styles";
+import { carouselAnimation, slideDeckAnimation } from "../animations";
+import { Arrow } from "../assets/svgs";
 
-const linkStyle = {
-  color: "#8954A8",
-  fontWeight: "bold",
-  fontSize: 16,
-  verticalAlign: "5%",
-}
+const IndexPage = ({ data }) => {
+  const pageData = data.allMarkdownRemark.edges[0].node.frontmatter;
+  const carousels = useRef([]);
+  const slides = useRef([]);
 
-const docLinkStyle = {
-  ...linkStyle,
-  listStyleType: "none",
-  marginBottom: 24,
-}
+  const [zIndex, setZIndex] = useState(0);
 
-const descriptionStyle = {
-  color: "#232129",
-  fontSize: 14,
-  marginTop: 10,
-  marginBottom: 0,
-  lineHeight: 1.25,
-}
+  const handleImageClick = (event) => {
+    event.preventDefault();
+    const flipTimeline = gsap.timeline();
 
-const docLink = {
-  text: "Documentation",
-  url: "https://www.gatsbyjs.com/docs/",
-  color: "#8954A8",
-}
+    let direction = "150%";
+    let midAngle = 15;
 
-const badgeStyle = {
-  color: "#fff",
-  backgroundColor: "#088413",
-  border: "1px solid #088413",
-  fontSize: 11,
-  fontWeight: "bold",
-  letterSpacing: 1,
-  borderRadius: 4,
-  padding: "4px 6px",
-  display: "inline-block",
-  position: "relative",
-  top: -2,
-  marginLeft: 10,
-  lineHeight: 1,
-}
+    if (Math.random() > 0.5) {
+      direction = "-150%";
+      midAngle = -15;
+    }
 
-const links = [
-  {
-    text: "Tutorial",
-    url: "https://www.gatsbyjs.com/docs/tutorial/",
-    description:
-      "A great place to get started if you're new to web development. Designed to guide you through setting up your first Gatsby site.",
-    color: "#E95800",
-  },
-  {
-    text: "How to Guides",
-    url: "https://www.gatsbyjs.com/docs/how-to/",
-    description:
-      "Practical step-by-step guides to help you achieve a specific goal. Most useful when you're trying to get something done.",
-    color: "#1099A8",
-  },
-  {
-    text: "Reference Guides",
-    url: "https://www.gatsbyjs.com/docs/reference/",
-    description:
-      "Nitty-gritty technical descriptions of how Gatsby works. Most useful when you need detailed information about Gatsby's APIs.",
-    color: "#BC027F",
-  },
-  {
-    text: "Conceptual Guides",
-    url: "https://www.gatsbyjs.com/docs/conceptual/",
-    description:
-      "Big-picture explanations of higher-level Gatsby concepts. Most useful for building understanding of a particular topic.",
-    color: "#0D96F2",
-  },
-  {
-    text: "Plugin Library",
-    url: "https://www.gatsbyjs.com/plugins",
-    description:
-      "Add functionality and customize your Gatsby site or app with thousands of plugins built by our amazing developer community.",
-    color: "#8EB814",
-  },
-  {
-    text: "Build and Host",
-    url: "https://www.gatsbyjs.com/cloud",
-    badge: true,
-    description:
-      "Now you’re ready to show the world! Give your Gatsby site superpowers: Build and host on Gatsby Cloud. Get started for free!",
-    color: "#663399",
-  },
-]
+    // GatsbyImage positions the img tag absolute so the target ends up being the img.
+    // So have to access div that's being clicked by accessing parent elements.
+    const slide = event.target.parentElement.parentElement.parentElement;
 
-const IndexPage = () => {
+    flipTimeline
+      .set(slide, { x: 0 })
+      .to(slide, {
+        x: direction,
+        rotation: midAngle,
+        rotationY: 90,
+        scale: 1.1,
+      })
+      .set(slide, { zIndex: zIndex })
+      .to(slide, {
+        x: 0,
+        rotation: () => {
+          return 16 * Math.random() - 8;
+        },
+        rotationY: 0,
+        scale: 1,
+      });
+
+    setZIndex(zIndex - 1);
+  };
+
+  useEffect(() => {
+    carouselAnimation({ carousels });
+    slideDeckAnimation({ slides });
+  }, []);
+
   return (
-    <main style={pageStyles}>
-      <h1 style={headingStyles}>
-        Congratulations
-        <br />
-        <span style={headingAccentStyles}>— you just made a Gatsby site! 🎉🎉🎉</span>
-      </h1>
-      <p style={paragraphStyles}>
-        Edit <code style={codeStyles}>src/pages/index.js</code> to see this page
-        update in real-time. 😎
-      </p>
-      <ul style={listStyles}>
-        <li style={docLinkStyle}>
-          <a
-            style={linkStyle}
-            href={`${docLink.url}?utm_source=starter&utm_medium=start-page&utm_campaign=minimal-starter`}
-          >
-            {docLink.text}
-          </a>
-        </li>
-        {links.map(link => (
-          <li key={link.url} style={{ ...listItemStyles, color: link.color }}>
-            <span>
-              <a
-                style={linkStyle}
-                href={`${link.url}?utm_source=starter&utm_medium=start-page&utm_campaign=minimal-starter`}
-              >
-                {link.text}
-              </a>
-              {link.badge && (
-                <span style={badgeStyle} aria-label="New Badge">
-                  NEW!
-                </span>
-              )}
-              <p style={descriptionStyle}>{link.description}</p>
-            </span>
-          </li>
-        ))}
-      </ul>
-      <img
-        alt="Gatsby G Logo"
-        src="data:image/svg+xml,%3Csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2a10 10 0 110 20 10 10 0 010-20zm0 2c-3.73 0-6.86 2.55-7.75 6L14 19.75c3.45-.89 6-4.02 6-7.75h-5.25v1.5h3.45a6.37 6.37 0 01-3.89 4.44L6.06 9.69C7 7.31 9.3 5.63 12 5.63c2.13 0 4 1.04 5.18 2.65l1.23-1.06A7.959 7.959 0 0012 4zm-8 8a8 8 0 008 8c.04 0 .09 0-8-8z' fill='%23639'/%3E%3C/svg%3E"
-      />
-    </main>
-  )
-}
+    <>
+      <GlobalStyles />
+      <Header>
+        <h1 ref={(element) => (carousels.current[0] = element)}>
+          {Array.apply(null, { length: 20 }).map((index) => {
+            return <span key={index}>Seamstress</span>;
+          })}
+        </h1>
+        <h2 ref={(element) => (carousels.current[1] = element)}>
+          {Array.apply(null, { length: 20 }).map((index) => {
+            return <span key={index}>Lookbook Spring + Summer</span>;
+          })}
+        </h2>
+      </Header>
+      {pageData.sections.map((section, index) => {
+        const reverse = (index & 1) === 1 ? 2 : 1;
+        return (
+          <Section reverse={reverse} key={index}>
+            <Split>
+              <Slides ref={(element) => (slides.current[index] = element)}>
+                {section.slides.map((slide) => {
+                  const profile = getImage(slide.slide);
+                  return (
+                    <div onClick={handleImageClick}>
+                      <GatsbyImage image={profile} alt={slide.alt} />
+                    </div>
+                  );
+                })}
+              </Slides>
+            </Split>
+            <Split>
+              <Info>
+                <h2>{section.title}</h2>
+                <p>{section.summary}</p>
+                <p>
+                  <a href="#">
+                    Read more
+                    <Arrow />
+                  </a>
+                </p>
+              </Info>
+            </Split>
+          </Section>
+        );
+      })}
+    </>
+  );
+};
 
-export default IndexPage
+export const query = graphql`
+  query {
+    allMarkdownRemark(filter: { frontmatter: { id: { eq: 1 } } }) {
+      edges {
+        node {
+          id
+          frontmatter {
+            id
+            sections {
+              sectionOrder
+              summary
+              title
+              slides {
+                alt
+                slide {
+                  id
+                  childImageSharp {
+                    gatsbyImageData(
+                      layout: FULL_WIDTH
+                      placeholder: BLURRED
+                      formats: [AUTO, WEBP, AVIF]
+                    )
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 
-export const Head = () => <title>Home Page</title>
+const Info = styled.div`
+  padding: 2rem;
+  max-width: 480px;
+  h2 {
+    font-size: 2rem;
+  }
+  p {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+  }
+`;
+
+const Slides = styled.div`
+  width: 500px;
+  height: 750px;
+  position: relative;
+  perspective: 800px;
+  div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 500px;
+    height: 750px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.25);
+  }
+`;
+
+const Split = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+`;
+
+const Section = styled.section`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+  grid-auto-flow: dense;
+  a {
+    background-color: #ffffff;
+    color: #111111;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 8px 24px 8px 24px;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    svg {
+      margin: 0 0 0 8px;
+      width: 10px;
+      height: 16px;
+      transition: width 0.25s;
+    }
+    &:hover {
+      svg {
+        width: 25px;
+      }
+    }
+  }
+  > * {
+    &:first-child {
+      grid-column: ${({ reverse }) => reverse};
+    }
+  }
+`;
+
+const Header = styled.header`
+  position: fixed;
+  top: 0.5rem;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  font-weight: 800;
+  z-index: 100;
+  h1,
+  h2 {
+    display: flex;
+    margin: 0;
+  }
+  span {
+    font-size: 1rem;
+    flex: 0 0 auto;
+    display: inline-block;
+  }
+  h1 {
+    span {
+      width: 150px;
+    }
+  }
+  h2 {
+    span {
+      width: 250px;
+    }
+  }
+`;
+
+export default IndexPage;
